@@ -1,0 +1,46 @@
+---
+// Layout
+import BlogPost from '../../layouts/BlogPost.astro';
+
+// Astro
+import { type CollectionEntry, getCollection } from 'astro:content';
+import { render } from 'astro:content';
+
+// Creates Static Routes for Blog Posts from different sources
+export async function getStaticPaths() {
+  // Set Routes Parameters for Local Blog Posts
+  const posts = await getCollection('blog');
+  const postRoutes = posts.map((post) => ({
+    params: { slug: post.id },
+    props: post,
+  }));
+
+  // Set Route Parameters for Notion Blog Posts
+  const notionPosts = await getCollection('notionBlogDatabase');
+  const notionPostRoutes = notionPosts.map((notionPost) => ({
+    params: {
+      slug: notionPost.data.properties.Video.title[0]?.plain_text,
+    },
+    props: notionPost,
+  }));
+
+  return [...postRoutes, ...notionPostRoutes];
+  // return [...notionPostRoutes];
+}
+
+// type Props = CollectionEntry<'blog'>;
+
+// Get the Props for the Blog Post, and render the content
+const blogPost = Astro.props;
+const { Content } = await render(blogPost);
+---
+
+<!-- Render the Correct Component based on the Collection -->{
+  blogPost.collection === 'blog' ? (
+    <BlogPost {...blogPost.data}>
+      <Content />
+    </BlogPost>
+  ) : (
+    <Content />
+  )
+}
